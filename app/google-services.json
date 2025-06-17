@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "70869843525",
+    "project_id": "servepupil",
+    "storage_bucket": "servepupil.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:70869843525:android:5b99f0a24acc6d8bf22d2c",
+        "android_client_info": {
+          "package_name": "com.example.servepupil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXFtDLP8S7CA9-65VbKmncTfQIqy7F8yA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
