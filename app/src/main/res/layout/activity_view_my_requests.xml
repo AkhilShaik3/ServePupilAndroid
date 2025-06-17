@@ -16,10 +16,12 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp" />
 
-    <ListView
-        android:id="@+id/listViewRequests"
+
+    <LinearLayout
+        android:id="@+id/requestsContainer"
+        android:orientation="vertical"
+        android:padding="16dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:divider="@android:color/darker_gray"
-        android:dividerHeight="1dp" />
+        android:layout_height="wrap_content" />
+
 </LinearLayout>
