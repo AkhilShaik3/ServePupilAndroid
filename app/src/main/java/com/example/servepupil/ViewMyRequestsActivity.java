@@ -113,10 +113,15 @@ public class ViewMyRequestsActivity extends AppCompatActivity {
 
                     // Comments
                     commentIcon.setOnClickListener(v -> {
-                        Intent intent = new Intent(ViewMyRequestsActivity.this, CommentsActivity.class);
-                        intent.putExtra("requestOwnerUid", uid);
-                        intent.putExtra("requestId", requestId);
-                        startActivity(intent);
+                        if (uid != null && requestId != null) {
+                            Intent intent = new Intent(ViewMyRequestsActivity.this, CommentsActivity.class);
+                            intent.putExtra("requestOwnerUid", uid);
+                            intent.putExtra("requestId", requestId);
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(ViewMyRequestsActivity.this, "Error: UID or request ID is missing", Toast.LENGTH_SHORT).show();
+                        }
+
                     });
 
                     requestsContainer.addView(cardView);

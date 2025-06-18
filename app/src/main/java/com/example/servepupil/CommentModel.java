@@ -1,12 +1,11 @@
 package com.example.servepupil;
-
 public class CommentModel {
     private String uid;
     private String text;
     private long timestamp;
 
     public CommentModel() {
-        // Required for Firebase deserialization
+        // Default constructor required for calls to DataSnapshot.getValue(CommentModel.class)
     }
 
     public CommentModel(String uid, String text, long timestamp) {
