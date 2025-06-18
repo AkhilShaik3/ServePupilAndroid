@@ -10,7 +10,7 @@
         android:id="@+id/heading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="My Requests"
+        android:text="Others Requests"
         android:textSize="22sp"
         android:textStyle="bold"
         android:layout_gravity="center_horizontal"
@@ -18,7 +18,7 @@
 
 
     <LinearLayout
-        android:id="@+id/requestsContainer"
+        android:id="@+id/othersRequestsContainer"
         android:orientation="vertical"
         android:padding="16dp"
         android:layout_width="match_parent"

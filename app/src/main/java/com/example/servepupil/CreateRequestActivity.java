@@ -166,7 +166,7 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
         imgRef.putFile(imageUri)
                 .addOnSuccessListener(taskSnapshot -> imgRef.getDownloadUrl().addOnSuccessListener(uri -> {
                     dialog.dismiss();
-                    saveRequest(uri.toString());
+                    saveRequest(uri.toString(), requestId);
                 }))
                 .addOnFailureListener(e -> {
                     dialog.dismiss();
@@ -174,12 +174,11 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
                 });
     }
 
-    private void saveRequest(String imageUrl) {
+    private void saveRequest(String imageUrl, String requestId) {
         String desc = edtDescription.getText().toString();
         String type = edtType.getText().toString();
         String place = edtPlace.getText().toString();
 
-        String requestId = requestRef.push().getKey();
         Map<String, Object> requestData = new HashMap<>();
         requestData.put("description", desc);
         requestData.put("requestType", type);
@@ -188,10 +187,13 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
         requestData.put("longitude", selectedLatLng.longitude);
         requestData.put("imageUrl", imageUrl);
         requestData.put("timestamp", ServerValue.TIMESTAMP);
+        requestData.put("likes", 0);
+        requestData.put("likedBy", new ArrayList<>());
+        requestData.put("comments", new HashMap<>());
 
         requestRef.child(requestId).setValue(requestData)
                 .addOnSuccessListener(unused -> {
-                    Toast.makeText(this, "Request submitted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Request submitted successfully", Toast.LENGTH_SHORT).show();
                     finish();
                 })
                 .addOnFailureListener(e ->

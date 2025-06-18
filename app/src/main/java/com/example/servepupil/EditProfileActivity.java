@@ -51,7 +51,7 @@ public class EditProfileActivity extends AppCompatActivity {
         userRef = FirebaseDatabase.getInstance().getReference("users").child(uid);
         storageRef = FirebaseStorage.getInstance().getReference("profile_images/" + uid + ".jpg");
 
-        // Get data from intent
+        
         Intent intent = getIntent();
         editName.setText(intent.getStringExtra("name"));
         editBio.setText(intent.getStringExtra("bio"));
@@ -121,8 +121,8 @@ public class EditProfileActivity extends AppCompatActivity {
         userRef.updateChildren(updateData)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "Profile updated successfully!", Toast.LENGTH_SHORT).show();
-                    setResult(RESULT_OK); // Set success result
-                    finish();             // Finish and go back to ProfileViewActivity
+                    setResult(RESULT_OK);
+                    finish();
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Update failed: " + e.getMessage(), Toast.LENGTH_SHORT).show()
