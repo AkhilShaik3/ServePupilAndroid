@@ -68,7 +68,7 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
         storageRef = FirebaseStorage.getInstance().getReference("request_images");
 
         if (!Places.isInitialized()) {
-            Places.initialize(getApplicationContext(), "YOUR_GOOGLE_MAPS_API_KEY");
+            Places.initialize(getApplicationContext(), "AIzaSyDMYh_Jl6tzJCMD1aDn2TmySEE8ZPbzeMk");
         }
         placesClient = Places.createClient(this);
 
