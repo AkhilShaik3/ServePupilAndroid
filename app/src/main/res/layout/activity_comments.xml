@@ -4,6 +4,22 @@
     android:background="#F5F5F5"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
+    <!-- Logo Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:layout_marginBottom="12dp">
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/logo"
+            android:contentDescription="Logo" />
+    </LinearLayout>
+
     <TextView
         android:id="@+id/heading"
         android:layout_width="wrap_content"

@@ -113,6 +113,13 @@ public class ViewOthersRequestsActivity extends AppCompatActivity {
                         btnReport.setOnClickListener(v -> Toast.makeText(ViewOthersRequestsActivity.this, "Reported", Toast.LENGTH_SHORT).show());
 
                         othersContainer.addView(cardView);
+
+                        usernameView.setOnClickListener(v -> {
+                            Intent intent = new Intent(ViewOthersRequestsActivity.this, OtherUserProfileActivity.class);
+                            intent.putExtra("userId", userId); // Pass the clicked user's ID
+                            startActivity(intent);
+                        });
+
                     }
                 }
             }
