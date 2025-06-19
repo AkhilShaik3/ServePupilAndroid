@@ -123,12 +123,30 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
         imagePreview.setOnClickListener(v -> openImagePicker());
 
         btnSubmit.setOnClickListener(v -> {
-            if (imageUri != null) {
-                uploadImageAndCreateRequest();
-            } else {
+            if (imageUri == null) {
                 Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");
+            usersRef.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        // UID exists in users node
+                        uploadImageAndCreateRequest();
+                    } else {
+                        Toast.makeText(CreateRequestActivity.this, "Please create your profile before creating request.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(CreateRequestActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         });
+
 
         Bundle mapViewBundle = savedInstanceState != null ?
                 savedInstanceState.getBundle(MAPVIEW_BUNDLE_KEY) : new Bundle();
