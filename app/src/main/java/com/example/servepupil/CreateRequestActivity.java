@@ -2,7 +2,9 @@ package com.example.servepupil;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -13,7 +15,9 @@ import android.widget.*;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.location.*;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.model.*;
 import com.google.android.libraries.places.api.Places;
@@ -39,14 +43,17 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
     private PlacesClient placesClient;
     private ArrayAdapter<String> adapter;
     private List<AutocompletePrediction> predictionList;
-    private LatLng selectedLatLng = new LatLng(45.5017, -73.5673);
+    private LatLng selectedLatLng;
 
     private FirebaseAuth mAuth;
     private DatabaseReference requestRef;
     private StorageReference storageRef;
     private String uid;
 
+    private FusedLocationProviderClient fusedLocationClient;
+
     private static final int IMAGE_PICK_REQUEST = 101;
+    private static final int LOCATION_PERMISSION_REQUEST = 1001;
     private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
 
     @Override
@@ -75,15 +82,34 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         placeSuggestions.setAdapter(adapter);
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
+                if (location != null) {
+                    selectedLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                    if (mMap != null) {
+                        mMap.clear();
+                        mMap.addMarker(new MarkerOptions().position(selectedLatLng).title("Your Location"));
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng, 15f));
+                    }
+                }
+            });
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST);
+        }
+
         edtPlace.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void afterTextChanged(Editable s) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 FindAutocompletePredictionsRequest request = FindAutocompletePredictionsRequest.builder()
-                        .setQuery(s.toString())
-                        .build();
+                        .setQuery(s.toString()).build();
                 placesClient.findAutocompletePredictions(request)
                         .addOnSuccessListener(response -> {
                             predictionList = response.getAutocompletePredictions();
@@ -95,9 +121,6 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
                             adapter.addAll(suggestions);
                         });
             }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
         });
 
         placeSuggestions.setOnItemClickListener((parent, view, position, id) -> {
@@ -133,7 +156,6 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.exists()) {
-                        // UID exists in users node
                         uploadImageAndCreateRequest();
                     } else {
                         Toast.makeText(CreateRequestActivity.this, "Please create your profile before creating request.", Toast.LENGTH_SHORT).show();
@@ -146,7 +168,6 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
                 }
             });
         });
-
 
         Bundle mapViewBundle = savedInstanceState != null ?
                 savedInstanceState.getBundle(MAPVIEW_BUNDLE_KEY) : new Bundle();
@@ -221,8 +242,10 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.addMarker(new MarkerOptions().position(selectedLatLng).title("Default"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng, 13f));
+        if (selectedLatLng != null) {
+            mMap.addMarker(new MarkerOptions().position(selectedLatLng).title("Your Location"));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng, 13f));
+        }
     }
 
     @Override
@@ -252,5 +275,18 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
             outState.putBundle(MAPVIEW_BUNDLE_KEY, mapViewBundle);
         }
         mapView.onSaveInstanceState(mapViewBundle);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST &&
+                grantResults.length > 0 &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            recreate(); // reload to fetch live location
+        } else {
+            Toast.makeText(this, "Location permission is required to show your location.", Toast.LENGTH_SHORT).show();
+        }
     }
 }
