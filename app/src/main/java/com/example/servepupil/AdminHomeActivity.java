@@ -33,6 +33,14 @@ public class AdminHomeActivity extends AppCompatActivity {
                 startActivity(new Intent(AdminHomeActivity.this, UsersListActivity.class));
             }
         });
+
+        btnViewReports.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(AdminHomeActivity.this, ReportsOverviewActivity.class));
+            }
+        });
+
         btnLogout.setOnClickListener(view -> {
             mAuth.signOut();
             Intent intent = new Intent(AdminHomeActivity.this, LoginActivity.class);

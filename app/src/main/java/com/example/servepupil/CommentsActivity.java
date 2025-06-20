@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.*;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.*;
 
 import java.util.*;
@@ -27,6 +28,7 @@ public class CommentsActivity extends AppCompatActivity {
 
     private DatabaseReference commentsRef;
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    private FirebaseUser currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +52,15 @@ public class CommentsActivity extends AppCompatActivity {
                 .child(requestId)
                 .child("comments");
 
+        currentUser = mAuth.getCurrentUser();
+
+        // 🔒 Hide comment input if admin
+        if (currentUser != null && "admin@gmail.com".equalsIgnoreCase(currentUser.getEmail())) {
+            edtComment.setVisibility(View.GONE);
+            btnPost.setVisibility(View.GONE);
+        }
+
+        monitorRequestDeletion(); // 👈 Watch if request is deleted
         fetchComments();
 
         btnPost.setOnClickListener(v -> {
@@ -97,5 +108,26 @@ public class CommentsActivity extends AppCompatActivity {
                 .addOnSuccessListener(unused -> edtComment.setText(""));
     }
 
+    // ✅ Listen for request deletion and auto-exit
+    private void monitorRequestDeletion() {
+        DatabaseReference requestRef = FirebaseDatabase.getInstance()
+                .getReference("requests")
+                .child(requestOwnerUid)
+                .child(requestId);
 
+        requestRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!snapshot.exists()) {
+                    Toast.makeText(CommentsActivity.this, "This request was deleted", Toast.LENGTH_SHORT).show();
+                    finish(); // close the activity
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(CommentsActivity.this, "Failed to monitor request", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 }

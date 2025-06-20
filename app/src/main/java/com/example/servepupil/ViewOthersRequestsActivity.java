@@ -110,16 +110,44 @@ public class ViewOthersRequestsActivity extends AppCompatActivity {
                             startActivity(intent);
                         });
 
-                        btnReport.setOnClickListener(v -> Toast.makeText(ViewOthersRequestsActivity.this, "Reported", Toast.LENGTH_SHORT).show());
+                        // Report Button
+                        btnReport.setOnClickListener(v -> {
+                            DatabaseReference reportRef = FirebaseDatabase.getInstance()
+                                    .getReference("reported_content")
+                                    .child("requests")
+                                    .child(requestId);
+
+                            reportRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                    if (snapshot.exists()) {
+                                        Toast.makeText(ViewOthersRequestsActivity.this, "This request is already reported", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        reportRef.setValue(true).addOnCompleteListener(task -> {
+                                            if (task.isSuccessful()) {
+                                                Toast.makeText(ViewOthersRequestsActivity.this, "Reported successfully", Toast.LENGTH_SHORT).show();
+                                                btnReport.setEnabled(false);
+                                            } else {
+                                                Toast.makeText(ViewOthersRequestsActivity.this, "Failed to report", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+                                    Toast.makeText(ViewOthersRequestsActivity.this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        });
 
                         othersContainer.addView(cardView);
 
                         usernameView.setOnClickListener(v -> {
                             Intent intent = new Intent(ViewOthersRequestsActivity.this, OtherUserProfileActivity.class);
-                            intent.putExtra("userId", userId); // Pass the clicked user's ID
+                            intent.putExtra("userId", userId);
                             startActivity(intent);
                         });
-
                     }
                 }
             }
