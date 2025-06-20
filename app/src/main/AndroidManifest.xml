@@ -13,6 +13,18 @@
         android:theme="@style/Theme.ServePupil"
         tools:targetApi="31">
         <activity
+            android:name=".UsersListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".OtherUserProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ViewOthersRequestsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CommentsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ChangePasswordActivity"
             android:exported="false" />
         <activity
@@ -21,7 +33,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDHujk0Z7p3_mjmPsicmn7T9iyQBC0ZqtU" />
+            android:value="AIzaSyDMYh_Jl6tzJCMD1aDn2TmySEE8ZPbzeMk" />
 
         <activity
             android:name=".CreateRequestActivity"

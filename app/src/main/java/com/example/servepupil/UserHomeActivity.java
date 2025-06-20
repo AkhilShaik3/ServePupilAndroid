@@ -53,6 +53,13 @@ public class UserHomeActivity extends AppCompatActivity {
             }
         });
 
+        btnViewOthers.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(UserHomeActivity.this, ViewOthersRequestsActivity.class));
+            }
+        });
+
         btnProfile.setOnClickListener(view -> {
             FirebaseUser user = mAuth.getCurrentUser();
             if (user == null) {
