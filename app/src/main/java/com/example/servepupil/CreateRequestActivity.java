@@ -84,24 +84,6 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
-                if (location != null) {
-                    selectedLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    if (mMap != null) {
-                        mMap.clear();
-                        mMap.addMarker(new MarkerOptions().position(selectedLatLng).title("Your Location"));
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng, 15f));
-                    }
-                }
-            });
-        } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_PERMISSION_REQUEST);
-        }
-
         edtPlace.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void afterTextChanged(Editable s) {}
@@ -119,6 +101,7 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
                             }
                             adapter.clear();
                             adapter.addAll(suggestions);
+                            placeSuggestions.setVisibility(View.VISIBLE);
                         });
             }
         });
@@ -135,7 +118,7 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
             placesClient.fetchPlace(placeRequest)
                     .addOnSuccessListener(response -> {
                         selectedLatLng = response.getPlace().getLatLng();
-                        if (mMap != null) {
+                        if (mMap != null && selectedLatLng != null) {
                             mMap.clear();
                             mMap.addMarker(new MarkerOptions().position(selectedLatLng).title("Selected"));
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng, 15f));
@@ -173,6 +156,44 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
                 savedInstanceState.getBundle(MAPVIEW_BUNDLE_KEY) : new Bundle();
         mapView.onCreate(mapViewBundle);
         mapView.getMapAsync(this);
+    }
+
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        mMap = googleMap;
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST);
+            return;
+        }
+
+        // Request fresh location update every time
+        LocationRequest locationRequest = LocationRequest.create()
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                .setInterval(1000)
+                .setNumUpdates(1);
+
+        fusedLocationClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                Location freshLocation = locationResult.getLastLocation();
+                if (freshLocation != null) {
+                    showLocationOnMap(freshLocation);
+                } else {
+                    Toast.makeText(CreateRequestActivity.this, "Unable to fetch your current location", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, getMainLooper());
+    }
+
+    private void showLocationOnMap(Location location) {
+        selectedLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.clear();
+        mMap.addMarker(new MarkerOptions().position(selectedLatLng).title("Your Location"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng, 15f));
     }
 
     private void openImagePicker() {
@@ -240,15 +261,6 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
     }
 
     @Override
-    public void onMapReady(@NonNull GoogleMap googleMap) {
-        mMap = googleMap;
-        if (selectedLatLng != null) {
-            mMap.addMarker(new MarkerOptions().position(selectedLatLng).title("Your Location"));
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng, 13f));
-        }
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         mapView.onResume();
@@ -284,7 +296,7 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
         if (requestCode == LOCATION_PERMISSION_REQUEST &&
                 grantResults.length > 0 &&
                 grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            recreate(); // reload to fetch live location
+            mapView.getMapAsync(this); // refresh map after permission granted
         } else {
             Toast.makeText(this, "Location permission is required to show your location.", Toast.LENGTH_SHORT).show();
         }
