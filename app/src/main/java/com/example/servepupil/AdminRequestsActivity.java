@@ -38,7 +38,7 @@ public class AdminRequestsActivity extends AppCompatActivity {
         requestsRef = FirebaseDatabase.getInstance().getReference("requests");
         usersRef = FirebaseDatabase.getInstance().getReference("users");
 
-        adapter = new AdminRequestAdapter(this, allRequests, requestKeys, ownerUids, (request, position) -> deleteRequest(position));
+        adapter = new AdminRequestAdapter(this, allRequests, ownerUids, requestKeys, (request, position) -> deleteRequest(position));
         requestsListView.setAdapter(adapter);
 
         loadAllUsernamesAndListenRequests();

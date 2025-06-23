@@ -14,22 +14,22 @@ import java.util.Map;
 public class AdminRequestAdapter extends ArrayAdapter<RequestModel> {
 
     private Map<String, String> uidToUsername = new HashMap<>();
-    private List<String> requestKeys;
-    private List<String> ownerUids;
-    private Context context;
     private OnDeleteClickListener onDeleteClickListener;
+
+    // To hold owner UIDs and request IDs to pass on comment icon click
+    private List<String> ownerUids;
+    private List<String> requestKeys;
 
     public interface OnDeleteClickListener {
         void onDelete(RequestModel request, int position);
     }
 
     public AdminRequestAdapter(Context context, List<RequestModel> requests,
-                               List<String> requestKeys, List<String> ownerUids,
+                               List<String> ownerUids, List<String> requestKeys,
                                OnDeleteClickListener listener) {
         super(context, 0, requests);
-        this.context = context;
-        this.requestKeys = requestKeys;
         this.ownerUids = ownerUids;
+        this.requestKeys = requestKeys;
         this.onDeleteClickListener = listener;
     }
 
@@ -76,10 +76,13 @@ public class AdminRequestAdapter extends ArrayAdapter<RequestModel> {
         String username = uidToUsername.get(request.getOwnerUid());
         usernameView.setText(username != null ? username : "Unknown");
 
-        deleteBtn.setVisibility(View.VISIBLE);
-        deleteBtn.setOnClickListener(v -> {
-            if (onDeleteClickListener != null) {
-                onDeleteClickListener.onDelete(request, position);
+        // Click username to open OtherUserProfileActivity
+        usernameView.setOnClickListener(v -> {
+            String ownerUid = request.getOwnerUid();
+            if (ownerUid != null && !ownerUid.isEmpty()) {
+                Intent intent = new Intent(getContext(), OtherUserProfileActivity.class);
+                intent.putExtra("userId", ownerUid);
+                getContext().startActivity(intent);
             }
         });
 
@@ -88,10 +91,17 @@ public class AdminRequestAdapter extends ArrayAdapter<RequestModel> {
             String ownerUid = ownerUids.get(position);
             String requestId = requestKeys.get(position);
 
-            Intent intent = new Intent(context, CommentsActivity.class);
+            Intent intent = new Intent(getContext(), CommentsActivity.class);
             intent.putExtra("requestOwnerUid", ownerUid);
             intent.putExtra("requestId", requestId);
-            context.startActivity(intent);
+            getContext().startActivity(intent);
+        });
+
+        deleteBtn.setVisibility(View.VISIBLE);
+        deleteBtn.setOnClickListener(v -> {
+            if (onDeleteClickListener != null) {
+                onDeleteClickListener.onDelete(request, position);
+            }
         });
 
         return convertView;

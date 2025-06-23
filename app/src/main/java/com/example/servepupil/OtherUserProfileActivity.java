@@ -1,7 +1,6 @@
 package com.example.servepupil;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -43,13 +42,8 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         btnReport = findViewById(R.id.btnReport);
         btnBlock = findViewById(R.id.btnBlock);
 
-        btnBlock.setVisibility(View.GONE); // Show only for admin
 
         loadUserInfo();
-
-        btnFollow.setOnClickListener(v ->
-                Toast.makeText(this, "Follow clicked", Toast.LENGTH_SHORT).show()
-        );
 
         btnReport.setOnClickListener(v -> {
             if (userId == null || userId.equals(currentUser.getUid())) {
@@ -65,9 +59,32 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         btnBlock.setOnClickListener(v -> {
             if (userId == null) return;
 
-            usersRef.child(userId).child("isBlocked").setValue(true);
-            reportRef.child(userId).removeValue();
-            Toast.makeText(this, "User blocked", Toast.LENGTH_SHORT).show();
+            DatabaseReference userRef = usersRef.child(userId);
+
+            userRef.child("isBlocked").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    Boolean isBlocked = snapshot.getValue(Boolean.class);
+                    if (isBlocked != null && isBlocked) {
+                        // Unblock user
+                        userRef.child("isBlocked").setValue(false);
+                        reportRef.child(userId).removeValue();
+                        btnBlock.setText("Block User");
+                        btnBlock.setBackgroundTintList(getResources().getColorStateList(R.color.red)); // original color or red
+                    } else {
+                        // Block user
+                        userRef.child("isBlocked").setValue(true);
+                        reportRef.child(userId).removeValue();
+                        btnBlock.setText("Unblock User");
+                        btnBlock.setBackgroundTintList(getResources().getColorStateList(R.color.teal_700));
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(OtherUserProfileActivity.this, "Failed to update block status", Toast.LENGTH_SHORT).show();
+                }
+            });
         });
     }
 
@@ -94,8 +111,20 @@ public class OtherUserProfileActivity extends AppCompatActivity {
                         .into(profileImage);
 
                 if (currentUser != null && "admin@gmail.com".equalsIgnoreCase(currentUser.getEmail())) {
-                    btnBlock.setVisibility(View.VISIBLE);
-                    btnReport.setVisibility(View.GONE);
+                    btnBlock.setVisibility(android.view.View.VISIBLE);
+                    btnReport.setVisibility(android.view.View.GONE);
+                    btnFollow.setVisibility(android.view.View.GONE);
+
+                    Boolean isBlocked = snapshot.child("isBlocked").getValue(Boolean.class);
+                    if (isBlocked != null && isBlocked) {
+                        btnBlock.setText("Unblock User");
+                        btnBlock.setBackgroundTintList(getResources().getColorStateList(R.color.teal_700));
+                    } else {
+                        btnBlock.setText("Block User");
+                        btnBlock.setBackgroundTintList(getResources().getColorStateList(R.color.red)); // or original red
+                    }
+                } else {
+                    btnBlock.setVisibility(android.view.View.GONE);
                 }
             }
 
