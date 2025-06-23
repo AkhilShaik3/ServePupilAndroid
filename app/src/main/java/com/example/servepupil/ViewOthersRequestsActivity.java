@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.*;
 
 import androidx.annotation.NonNull;
@@ -14,7 +13,7 @@ import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.*;
 
-import java.util.*;
+import java.util.Map;
 
 public class ViewOthersRequestsActivity extends AppCompatActivity {
 
@@ -22,6 +21,9 @@ public class ViewOthersRequestsActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private String currentUid;
     private DatabaseReference requestsRef, usersRef;
+    private ValueEventListener requestsListener;
+
+    private boolean isActivityDestroyed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,14 +41,19 @@ public class ViewOthersRequestsActivity extends AppCompatActivity {
     }
 
     private void loadOthersRequests() {
-        requestsRef.addValueEventListener(new ValueEventListener() {
+        requestsListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (isFinishing() || isActivityDestroyed) {
+                    // Activity is destroyed, skip loading UI
+                    return;
+                }
+
                 othersContainer.removeAllViews();
 
                 for (DataSnapshot userSnap : snapshot.getChildren()) {
                     String userId = userSnap.getKey();
-                    if (userId.equals(currentUid)) continue;
+                    if (userId == null || userId.equals(currentUid)) continue;
 
                     for (DataSnapshot requestSnap : userSnap.getChildren()) {
                         String requestId = requestSnap.getKey();
@@ -67,10 +74,13 @@ public class ViewOthersRequestsActivity extends AppCompatActivity {
                         ImageView commentIcon = cardView.findViewById(R.id.imgComment);
                         Button btnReport = cardView.findViewById(R.id.btnReport);
 
-                        Glide.with(ViewOthersRequestsActivity.this)
-                                .load(request.getImageUrl())
-                                .placeholder(R.drawable.placeholder)
-                                .into(image);
+                        // Glide with lifecycle check
+                        if (!isFinishing() && !isActivityDestroyed) {
+                            Glide.with(ViewOthersRequestsActivity.this)
+                                    .load(request.getImageUrl())
+                                    .placeholder(R.drawable.placeholder)
+                                    .into(image);
+                        }
 
                         desc.setText(request.getDescription());
                         type.setText(request.getRequestType());
@@ -154,9 +164,13 @@ public class ViewOthersRequestsActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(ViewOthersRequestsActivity.this, "Failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                if (!isFinishing() && !isActivityDestroyed) {
+                    Toast.makeText(ViewOthersRequestsActivity.this, "Failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
             }
-        });
+        };
+
+        requestsRef.addValueEventListener(requestsListener);
     }
 
     private void toggleLike(String ownerUid, String requestId, Map<String, Boolean> likedBy, ImageView heartIcon) {
@@ -167,6 +181,16 @@ public class ViewOthersRequestsActivity extends AppCompatActivity {
             likeRef.child(uid).removeValue();
         } else {
             likeRef.child(uid).setValue(true);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        isActivityDestroyed = true;
+
+        if (requestsListener != null && requestsRef != null) {
+            requestsRef.removeEventListener(requestsListener);
         }
     }
 }

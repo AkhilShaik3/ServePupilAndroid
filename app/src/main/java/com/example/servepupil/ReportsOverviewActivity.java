@@ -29,7 +29,7 @@ public class ReportsOverviewActivity extends AppCompatActivity {
         });
 
         btnReportedComments.setOnClickListener(v -> {
-//            startActivity(new Intent(this, ReportedCommentsActivity.class));
+            startActivity(new Intent(this, ReportedCommentsActivity.class));
         });
     }
 }

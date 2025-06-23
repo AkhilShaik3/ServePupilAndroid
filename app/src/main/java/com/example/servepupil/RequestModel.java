@@ -1,10 +1,11 @@
 package com.example.servepupil;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class RequestModel {
-    private String id;
+
+    private String ownerUid;   // ADD THIS FIELD
+
     private String description;
     private String requestType;
     private String place;
@@ -12,82 +13,90 @@ public class RequestModel {
     private double longitude;
     private String imageUrl;
     private long timestamp;
-    private int likes;
     private Map<String, Boolean> likedBy;
     private Map<String, CommentModel> comments;
 
     public RequestModel() {
-        // Default constructor
+        // Required empty constructor for Firebase
     }
 
-    public RequestModel(String id, String description, String requestType, String place, double latitude, double longitude, String imageUrl, long timestamp) {
-        this.id = id;
-        this.description = description;
-        this.requestType = requestType;
-        this.place = place;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.imageUrl = imageUrl;
-        this.timestamp = timestamp;
-        this.likes = 0;
-        this.likedBy = new HashMap<>();
-        this.comments = new HashMap<>();
+    // Getter and setter for ownerUid
+    public String getOwnerUid() {
+        return ownerUid;
     }
 
-    public String getId() {
-        return id;
+    public void setOwnerUid(String ownerUid) {
+        this.ownerUid = ownerUid;
     }
+
+    // Other getters and setters
 
     public String getDescription() {
         return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getRequestType() {
         return requestType;
     }
 
+    public void setRequestType(String requestType) {
+        this.requestType = requestType;
+    }
+
     public String getPlace() {
         return place;
+    }
+
+    public void setPlace(String place) {
+        this.place = place;
     }
 
     public double getLatitude() {
         return latitude;
     }
 
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
     public double getLongitude() {
         return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 
     public String getImageUrl() {
         return imageUrl;
     }
 
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public long getTimestamp() {
         return timestamp;
     }
 
-    public int getLikes() {
-        return likes;
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public Map<String, Boolean> getLikedBy() {
         return likedBy;
     }
 
-    public Map<String, CommentModel> getComments() {
-        return comments;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setLikes(int likes) {
-        this.likes = likes;
-    }
-
     public void setLikedBy(Map<String, Boolean> likedBy) {
         this.likedBy = likedBy;
+    }
+
+    public Map<String, CommentModel> getComments() {
+        return comments;
     }
 
     public void setComments(Map<String, CommentModel> comments) {

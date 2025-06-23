@@ -36,13 +36,20 @@ public class RequestAdapter extends ArrayAdapter<RequestModel> {
         Button deleteBtn = convertView.findViewById(R.id.btnDelete);
 
         // Load image
-        Glide.with(getContext()).load(request.getImageUrl()).placeholder(R.drawable.placeholder).into(image);
+        Glide.with(getContext())
+                .load(request.getImageUrl())
+                .placeholder(R.drawable.placeholder)
+                .into(image);
 
         // Bind data
         desc.setText(request.getDescription());
         type.setText(request.getRequestType());
         place.setText(request.getPlace());
-        likeCount.setText(String.valueOf(request.getLikes()));
+
+        // Calculate likes count from likedBy map
+        int likes = request.getLikedBy() != null ? request.getLikedBy().size() : 0;
+        likeCount.setText(String.valueOf(likes));
+
         commentCount.setText(String.valueOf(request.getComments() != null ? request.getComments().size() : 0));
 
         // Handle heart icon state

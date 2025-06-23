@@ -6,7 +6,6 @@
     android:layout_height="wrap_content"
     android:background="@android:color/white">
 
-    <!-- Username and Timestamp in a row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -31,7 +30,6 @@
             android:layout_height="wrap_content" />
     </LinearLayout>
 
-    <!-- Comment Text -->
     <TextView
         android:id="@+id/txtComment"
         android:layout_marginTop="4dp"
@@ -41,7 +39,32 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <!-- Divider -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btnReport"
+            android:text="Report"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:backgroundTint="#FF5722"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnDelete"
+            android:text="Delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textColor="@android:color/white"
+            android:backgroundTint="#FF5722"
+            android:visibility="gone" />
+    </LinearLayout>
+
     <View
         android:layout_marginTop="12dp"
         android:layout_width="match_parent"

@@ -13,6 +13,9 @@
         android:theme="@style/Theme.ServePupil"
         tools:targetApi="31">
         <activity
+            android:name=".ReportedCommentsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ReportedRequestsActivity"
             android:exported="false" />
         <activity
