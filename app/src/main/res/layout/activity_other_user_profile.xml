@@ -142,5 +142,15 @@
             android:textColor="#FFFFFF"
             android:backgroundTint="#B71C1C"
             android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/btnBlock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Block User"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#B71C1C"
+            android:visibility="gone"
+            android:layout_marginTop="8dp" />
     </LinearLayout>
 </ScrollView>
