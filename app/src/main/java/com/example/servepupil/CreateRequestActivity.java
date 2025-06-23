@@ -2,7 +2,9 @@ package com.example.servepupil;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -13,7 +15,9 @@ import android.widget.*;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.location.*;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.model.*;
 import com.google.android.libraries.places.api.Places;
@@ -39,14 +43,17 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
     private PlacesClient placesClient;
     private ArrayAdapter<String> adapter;
     private List<AutocompletePrediction> predictionList;
-    private LatLng selectedLatLng = new LatLng(45.5017, -73.5673);
+    private LatLng selectedLatLng;
 
     private FirebaseAuth mAuth;
     private DatabaseReference requestRef;
     private StorageReference storageRef;
     private String uid;
 
+    private FusedLocationProviderClient fusedLocationClient;
+
     private static final int IMAGE_PICK_REQUEST = 101;
+    private static final int LOCATION_PERMISSION_REQUEST = 1001;
     private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
 
     @Override
@@ -68,22 +75,23 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
         storageRef = FirebaseStorage.getInstance().getReference("request_images");
 
         if (!Places.isInitialized()) {
-            Places.initialize(getApplicationContext(), "YOUR_GOOGLE_MAPS_API_KEY");
+            Places.initialize(getApplicationContext(), "AIzaSyDMYh_Jl6tzJCMD1aDn2TmySEE8ZPbzeMk");
         }
         placesClient = Places.createClient(this);
 
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         placeSuggestions.setAdapter(adapter);
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
         edtPlace.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void afterTextChanged(Editable s) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 FindAutocompletePredictionsRequest request = FindAutocompletePredictionsRequest.builder()
-                        .setQuery(s.toString())
-                        .build();
+                        .setQuery(s.toString()).build();
                 placesClient.findAutocompletePredictions(request)
                         .addOnSuccessListener(response -> {
                             predictionList = response.getAutocompletePredictions();
@@ -93,11 +101,9 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
                             }
                             adapter.clear();
                             adapter.addAll(suggestions);
+                            placeSuggestions.setVisibility(View.VISIBLE);
                         });
             }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
         });
 
         placeSuggestions.setOnItemClickListener((parent, view, position, id) -> {
@@ -112,7 +118,7 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
             placesClient.fetchPlace(placeRequest)
                     .addOnSuccessListener(response -> {
                         selectedLatLng = response.getPlace().getLatLng();
-                        if (mMap != null) {
+                        if (mMap != null && selectedLatLng != null) {
                             mMap.clear();
                             mMap.addMarker(new MarkerOptions().position(selectedLatLng).title("Selected"));
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng, 15f));
@@ -123,17 +129,71 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
         imagePreview.setOnClickListener(v -> openImagePicker());
 
         btnSubmit.setOnClickListener(v -> {
-            if (imageUri != null) {
-                uploadImageAndCreateRequest();
-            } else {
+            if (imageUri == null) {
                 Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");
+            usersRef.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        uploadImageAndCreateRequest();
+                    } else {
+                        Toast.makeText(CreateRequestActivity.this, "Please create your profile before creating request.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(CreateRequestActivity.this, "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         Bundle mapViewBundle = savedInstanceState != null ?
                 savedInstanceState.getBundle(MAPVIEW_BUNDLE_KEY) : new Bundle();
         mapView.onCreate(mapViewBundle);
         mapView.getMapAsync(this);
+    }
+
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        mMap = googleMap;
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST);
+            return;
+        }
+
+        // Request fresh location update every time
+        LocationRequest locationRequest = LocationRequest.create()
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                .setInterval(1000)
+                .setNumUpdates(1);
+
+        fusedLocationClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                Location freshLocation = locationResult.getLastLocation();
+                if (freshLocation != null) {
+                    showLocationOnMap(freshLocation);
+                } else {
+                    Toast.makeText(CreateRequestActivity.this, "Unable to fetch your current location", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, getMainLooper());
+    }
+
+    private void showLocationOnMap(Location location) {
+        selectedLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.clear();
+        mMap.addMarker(new MarkerOptions().position(selectedLatLng).title("Your Location"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng, 15f));
     }
 
     private void openImagePicker() {
@@ -201,13 +261,6 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
     }
 
     @Override
-    public void onMapReady(@NonNull GoogleMap googleMap) {
-        mMap = googleMap;
-        mMap.addMarker(new MarkerOptions().position(selectedLatLng).title("Default"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng, 13f));
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         mapView.onResume();
@@ -234,5 +287,18 @@ public class CreateRequestActivity extends AppCompatActivity implements OnMapRea
             outState.putBundle(MAPVIEW_BUNDLE_KEY, mapViewBundle);
         }
         mapView.onSaveInstanceState(mapViewBundle);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST &&
+                grantResults.length > 0 &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            mapView.getMapAsync(this); // refresh map after permission granted
+        } else {
+            Toast.makeText(this, "Location permission is required to show your location.", Toast.LENGTH_SHORT).show();
+        }
     }
 }
