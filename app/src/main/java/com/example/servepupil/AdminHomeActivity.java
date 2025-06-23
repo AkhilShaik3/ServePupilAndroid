@@ -34,6 +34,13 @@ public class AdminHomeActivity extends AppCompatActivity {
             }
         });
 
+        btnViewRequests.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(AdminHomeActivity.this, AdminRequestsActivity.class));
+            }
+        });
+
         btnViewReports.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
