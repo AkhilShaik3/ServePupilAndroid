@@ -25,7 +25,7 @@ public class ReportsOverviewActivity extends AppCompatActivity {
         });
 
         btnReportedUsers.setOnClickListener(v -> {
-//            startActivity(new Intent(this, ReportedUsersActivity.class));
+            startActivity(new Intent(this, ReportedUsersActivity.class));
         });
 
         btnReportedComments.setOnClickListener(v -> {
