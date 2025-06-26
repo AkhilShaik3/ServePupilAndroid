@@ -22,6 +22,7 @@ public class ViewMyRequestsActivity extends AppCompatActivity {
     private DatabaseReference requestRef;
     private String uid;
     private FirebaseAuth mAuth;
+    private ValueEventListener requestListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,9 +39,11 @@ public class ViewMyRequestsActivity extends AppCompatActivity {
     }
 
     private void loadRequests() {
-        requestRef.addValueEventListener(new ValueEventListener() {
+        requestListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (isDestroyed()) return; // avoid crash after activity is destroyed
+
                 requestsContainer.removeAllViews();
 
                 for (DataSnapshot snap : snapshot.getChildren()) {
@@ -62,8 +65,14 @@ public class ViewMyRequestsActivity extends AppCompatActivity {
                     Button btnEdit = cardView.findViewById(R.id.btnEdit);
                     Button btnDelete = cardView.findViewById(R.id.btnDelete);
 
-                    // Set image and text
-                    Glide.with(ViewMyRequestsActivity.this).load(model.getImageUrl()).placeholder(R.drawable.placeholder).into(image);
+                    // Set image and text (safe from crash)
+                    if (!isDestroyed()) {
+                        Glide.with(ViewMyRequestsActivity.this)
+                                .load(model.getImageUrl())
+                                .placeholder(R.drawable.placeholder)
+                                .into(image);
+                    }
+
                     desc.setText(model.getDescription());
                     type.setText(model.getRequestType());
                     place.setText(model.getPlace());
@@ -88,30 +97,25 @@ public class ViewMyRequestsActivity extends AppCompatActivity {
 
                         if (currentlyLiked) {
                             likedByRef.child(uid).removeValue();
-                            heartIcon.setImageResource(R.drawable.ic_heart_unfilled);
-                            int updatedCount = Math.max(0, likes - 1);
-                            likeCount.setText(String.valueOf(updatedCount));
                         } else {
                             likedByRef.child(uid).setValue(true);
-                            heartIcon.setImageResource(R.drawable.ic_heart_filled);
-                            int updatedCount = likes + 1;
-                            likeCount.setText(String.valueOf(updatedCount));
                         }
                     });
 
-                    // Edit/Delete actions
+                    // Edit (placeholder)
                     btnEdit.setOnClickListener(v -> {
                         Toast.makeText(ViewMyRequestsActivity.this, "Edit clicked", Toast.LENGTH_SHORT).show();
                         // TODO: Navigate to edit screen
                     });
 
+                    // Delete
                     btnDelete.setOnClickListener(v -> {
                         requestRef.child(requestId).removeValue()
                                 .addOnSuccessListener(unused -> Toast.makeText(ViewMyRequestsActivity.this, "Request deleted", Toast.LENGTH_SHORT).show())
                                 .addOnFailureListener(e -> Toast.makeText(ViewMyRequestsActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                     });
 
-                    // Comments
+                    // Open Comments
                     commentIcon.setOnClickListener(v -> {
                         if (uid != null && requestId != null) {
                             Intent intent = new Intent(ViewMyRequestsActivity.this, CommentsActivity.class);
@@ -121,7 +125,6 @@ public class ViewMyRequestsActivity extends AppCompatActivity {
                         } else {
                             Toast.makeText(ViewMyRequestsActivity.this, "Error: UID or request ID is missing", Toast.LENGTH_SHORT).show();
                         }
-
                     });
 
                     requestsContainer.addView(cardView);
@@ -130,8 +133,20 @@ public class ViewMyRequestsActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(ViewMyRequestsActivity.this, "Failed to load: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                if (!isDestroyed()) {
+                    Toast.makeText(ViewMyRequestsActivity.this, "Failed to load: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
             }
-        });
+        };
+
+        requestRef.addValueEventListener(requestListener);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (requestListener != null) {
+            requestRef.removeEventListener(requestListener);
+        }
     }
 }
