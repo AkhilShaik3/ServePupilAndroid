@@ -16,6 +16,9 @@
         android:theme="@style/Theme.ServePupil"
         tools:targetApi="31">
         <activity
+            android:name=".FollowersFollowingActivity"
+            android:exported="false" />
+        <activity
             android:name=".EditRequestActivity"
             android:exported="false" />
         <activity

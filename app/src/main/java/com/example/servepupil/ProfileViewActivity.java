@@ -94,6 +94,21 @@ public class ProfileViewActivity extends AppCompatActivity {
                             ? followingSnapshot.getChildrenCount() : 0;
                     txtFollowing.setText(String.valueOf(followingCount));
 
+                    txtFollowers.setOnClickListener(v -> {
+                        Intent intent = new Intent(ProfileViewActivity.this, FollowersFollowingActivity.class);
+                        intent.putExtra("uid", uid);
+                        intent.putExtra("type", "followers");
+                        startActivity(intent);
+                    });
+
+                    txtFollowing.setOnClickListener(v -> {
+                        Intent intent = new Intent(ProfileViewActivity.this, FollowersFollowingActivity.class);
+                        intent.putExtra("uid", uid);
+                        intent.putExtra("type", "following");
+                        startActivity(intent);
+                    });
+
+
                     userImageUrl = imageUrl;
                     Glide.with(ProfileViewActivity.this)
                             .load(userImageUrl)
