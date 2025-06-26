@@ -9,11 +9,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
-import com.example.servepupil.UserModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.*;
 import com.google.firebase.storage.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class CreateProfileActivity extends AppCompatActivity {
@@ -108,12 +109,18 @@ public class CreateProfileActivity extends AppCompatActivity {
         String bio = inputBio.getText().toString();
         String phone = inputPhone.getText().toString();
 
-        UserModel user = new UserModel(uid, name, bio, phone, imageUrl, 0, 0);
+        // Empty maps for followers/following
+        Map<String, Boolean> followers = new HashMap<>();
+        Map<String, Boolean> following = new HashMap<>();
+
+        // Create user model
+        UserModel user = new UserModel(uid, name, bio, phone, imageUrl, followers, following, false);
+
         userRef.child(uid).setValue(user.toMap())
                 .addOnSuccessListener(unused -> {
                     progressDialog.dismiss();
                     Toast.makeText(CreateProfileActivity.this, "Profile Created", Toast.LENGTH_SHORT).show();
-                    finish(); // or start ProfileViewActivity
+                    finish(); // You can also navigate to another activity here
                 })
                 .addOnFailureListener(e -> {
                     progressDialog.dismiss();
