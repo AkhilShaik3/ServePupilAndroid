@@ -1,5 +1,6 @@
 package com.example.servepupil;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -92,9 +93,12 @@ public class UsersListActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                     });
 
-                    editBtn.setOnClickListener(v ->
-                            Toast.makeText(UsersListActivity.this, "Edit clicked for " + user.getName(), Toast.LENGTH_SHORT).show()
-                    );
+                    editBtn.setOnClickListener(v -> {
+                        Intent intent = new Intent(UsersListActivity.this, AdminEditProfileActivity.class);
+                        intent.putExtra("userId", user.getId());
+                        startActivity(intent);
+                    });
+
 
                     usersContainer.addView(userView);
                 }
