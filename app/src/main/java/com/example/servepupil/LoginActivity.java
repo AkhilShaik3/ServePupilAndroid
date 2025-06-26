@@ -8,8 +8,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.AuthResult;
-import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.*;
 import com.google.android.gms.tasks.Task;
 
 public class LoginActivity extends AppCompatActivity {
@@ -19,6 +19,7 @@ public class LoginActivity extends AppCompatActivity {
     TextView forgotPasswordTextView, signupTextView;
 
     FirebaseAuth mAuth;
+    DatabaseReference userRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,21 +44,40 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(LoginActivity.this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             } else {
                 mAuth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(LoginActivity.this, task -> {
+                        .addOnCompleteListener(task -> {
                             if (task.isSuccessful()) {
-                                Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
+                                FirebaseUser currentUser = mAuth.getCurrentUser();
+                                if (currentUser != null) {
+                                    String uid = currentUser.getUid();
+                                    userRef = FirebaseDatabase.getInstance().getReference("users").child(uid);
 
-                                // Redirect based on email
-                                if (email.equalsIgnoreCase("admin@gmail.com")) {
-                                    Intent intent = new Intent(LoginActivity.this, AdminHomeActivity.class);
-                                    startActivity(intent);
-                                    finish();
-                                } else {
-                                    Intent intent = new Intent(LoginActivity.this, UserHomeActivity.class);
-                                    startActivity(intent);
-                                    finish();
+                                    userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                            Boolean isBlocked = snapshot.child("isBlocked").getValue(Boolean.class);
+
+                                            if (Boolean.TRUE.equals(isBlocked)) {
+                                                mAuth.signOut(); // Sign user out if blocked
+                                                Toast.makeText(LoginActivity.this, "You are blocked by admin", Toast.LENGTH_LONG).show();
+                                            } else {
+                                                Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
+
+                                                // Redirect based on email
+                                                if (email.equalsIgnoreCase("admin@gmail.com")) {
+                                                    startActivity(new Intent(LoginActivity.this, AdminHomeActivity.class));
+                                                } else {
+                                                    startActivity(new Intent(LoginActivity.this, UserHomeActivity.class));
+                                                }
+                                                finish();
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError error) {
+                                            Toast.makeText(LoginActivity.this, "Error checking user status", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
                                 }
-
                             } else {
                                 Toast.makeText(LoginActivity.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                             }
