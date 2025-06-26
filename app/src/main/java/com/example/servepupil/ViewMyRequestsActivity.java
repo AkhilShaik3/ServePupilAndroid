@@ -102,11 +102,7 @@ public class ViewMyRequestsActivity extends AppCompatActivity {
                         }
                     });
 
-                    // Edit (placeholder)
-                    btnEdit.setOnClickListener(v -> {
-                        Toast.makeText(ViewMyRequestsActivity.this, "Edit clicked", Toast.LENGTH_SHORT).show();
-                        // TODO: Navigate to edit screen
-                    });
+
 
                     // Delete
                     btnDelete.setOnClickListener(v -> {
@@ -114,6 +110,13 @@ public class ViewMyRequestsActivity extends AppCompatActivity {
                                 .addOnSuccessListener(unused -> Toast.makeText(ViewMyRequestsActivity.this, "Request deleted", Toast.LENGTH_SHORT).show())
                                 .addOnFailureListener(e -> Toast.makeText(ViewMyRequestsActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                     });
+
+                    btnEdit.setOnClickListener(v -> {
+                        Intent intent = new Intent(ViewMyRequestsActivity.this, EditRequestActivity.class);
+                        intent.putExtra("requestId", requestId);
+                        startActivity(intent);
+                    });
+
 
                     // Open Comments
                     commentIcon.setOnClickListener(v -> {
