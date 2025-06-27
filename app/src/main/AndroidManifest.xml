@@ -16,6 +16,9 @@
         android:theme="@style/Theme.ServePupil"
         tools:targetApi="31">
         <activity
+            android:name=".PersonalFeedActivity"
+            android:exported="false" />
+        <activity
             android:name=".AdminEditProfileActivity"
             android:exported="false" />
         <activity
