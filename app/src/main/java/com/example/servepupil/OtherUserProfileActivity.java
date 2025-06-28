@@ -10,6 +10,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.*;
 
+import java.util.Map;
+
 public class OtherUserProfileActivity extends AppCompatActivity {
 
     private String userId;
@@ -20,7 +22,8 @@ public class OtherUserProfileActivity extends AppCompatActivity {
     private Button btnFollow, btnReport, btnBlock;
     private ImageView profileImage;
 
-    private String userName = "", userBio = "";
+    private ValueEventListener userListener;
+    private ValueEventListener followListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,8 +45,8 @@ public class OtherUserProfileActivity extends AppCompatActivity {
         btnReport = findViewById(R.id.btnReport);
         btnBlock = findViewById(R.id.btnBlock);
 
-
-        loadUserInfo();
+        setupUserListener();
+        setupFollowListener();
 
         btnReport.setOnClickListener(v -> {
             if (userId == null || userId.equals(currentUser.getUid())) {
@@ -66,13 +69,11 @@ public class OtherUserProfileActivity extends AppCompatActivity {
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     Boolean isBlocked = snapshot.getValue(Boolean.class);
                     if (isBlocked != null && isBlocked) {
-                        // Unblock user
                         userRef.child("isBlocked").setValue(false);
                         reportRef.child(userId).removeValue();
                         btnBlock.setText("Block User");
-                        btnBlock.setBackgroundTintList(getResources().getColorStateList(R.color.red)); // original color or red
+                        btnBlock.setBackgroundTintList(getResources().getColorStateList(R.color.red));
                     } else {
-                        // Block user
                         userRef.child("isBlocked").setValue(true);
                         reportRef.child(userId).removeValue();
                         btnBlock.setText("Unblock User");
@@ -86,22 +87,64 @@ public class OtherUserProfileActivity extends AppCompatActivity {
                 }
             });
         });
+
+        btnFollow.setOnClickListener(v -> {
+            if (userId == null || currentUser == null || userId.equals(currentUser.getUid())) {
+                Toast.makeText(this, "Invalid operation", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            final String currentUserId = currentUser.getUid();
+
+            usersRef.child(currentUserId).child("following").child(userId)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            boolean isFollowing = snapshot.exists();
+
+                            if (isFollowing) {
+                                usersRef.child(currentUserId).child("following").child(userId).removeValue();
+                                usersRef.child(userId).child("followers").child(currentUserId).removeValue();
+                                btnFollow.setText("Follow");
+                                Toast.makeText(OtherUserProfileActivity.this, "Unfollowed", Toast.LENGTH_SHORT).show();
+                            } else {
+                                usersRef.child(currentUserId).child("following").child(userId).setValue(true);
+                                usersRef.child(userId).child("followers").child(currentUserId).setValue(true);
+                                btnFollow.setText("Unfollow");
+                                Toast.makeText(OtherUserProfileActivity.this, "Followed", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            Toast.makeText(OtherUserProfileActivity.this, "Failed to update follow status", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        });
     }
 
-    private void loadUserInfo() {
-        usersRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+    private void setupUserListener() {
+        if (userId == null) return;
+
+        userListener = usersRef.child(userId).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                userName = snapshot.child("name").getValue(String.class);
+                String userName = snapshot.child("name").getValue(String.class);
                 String phone = snapshot.child("phone").getValue(String.class);
-                userBio = snapshot.child("bio").getValue(String.class);
+                String userBio = snapshot.child("bio").getValue(String.class);
                 String imageUrl = snapshot.child("imageUrl").getValue(String.class);
-                long followers = snapshot.child("followers").getChildrenCount();
-                long following = snapshot.child("following").getChildrenCount();
 
-                txtName.setText(userName);
-                txtPhone.setText(phone);
-                txtAddress.setText(userBio);
+                DataSnapshot followersSnapshot = snapshot.child("followers");
+                long followers = (followersSnapshot.exists() && followersSnapshot.getValue() instanceof Map)
+                        ? followersSnapshot.getChildrenCount() : 0;
+
+                DataSnapshot followingSnapshot = snapshot.child("following");
+                long following = (followingSnapshot.exists() && followingSnapshot.getValue() instanceof Map)
+                        ? followingSnapshot.getChildrenCount() : 0;
+
+                txtName.setText(userName != null ? userName : "");
+                txtPhone.setText(phone != null ? phone : "");
+                txtAddress.setText(userBio != null ? userBio : "");
                 txtFollowers.setText(String.valueOf(followers));
                 txtFollowing.setText(String.valueOf(following));
 
@@ -121,10 +164,12 @@ public class OtherUserProfileActivity extends AppCompatActivity {
                         btnBlock.setBackgroundTintList(getResources().getColorStateList(R.color.teal_700));
                     } else {
                         btnBlock.setText("Block User");
-                        btnBlock.setBackgroundTintList(getResources().getColorStateList(R.color.red)); // or original red
+                        btnBlock.setBackgroundTintList(getResources().getColorStateList(R.color.red));
                     }
                 } else {
                     btnBlock.setVisibility(android.view.View.GONE);
+                    btnReport.setVisibility(android.view.View.VISIBLE);
+                    btnFollow.setVisibility(android.view.View.VISIBLE);
                 }
             }
 
@@ -133,5 +178,37 @@ public class OtherUserProfileActivity extends AppCompatActivity {
                 Toast.makeText(OtherUserProfileActivity.this, "Error loading user", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void setupFollowListener() {
+        if (currentUser == null || userId == null) return;
+
+        followListener = usersRef.child(currentUser.getUid()).child("following").child(userId)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            btnFollow.setText("Unfollow");
+                        } else {
+                            btnFollow.setText("Follow");
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        btnFollow.setText("Follow");
+                    }
+                });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (userListener != null && userId != null) {
+            usersRef.child(userId).removeEventListener(userListener);
+        }
+        if (followListener != null && currentUser != null) {
+            usersRef.child(currentUser.getUid()).child("following").child(userId).removeEventListener(followListener);
+        }
     }
 }

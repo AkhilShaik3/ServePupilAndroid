@@ -16,7 +16,7 @@ import com.google.firebase.database.*;
 
 public class UserHomeActivity extends AppCompatActivity {
 
-    Button btnProfile, btnCreateRequest, btnViewOthers, btnViewMyRequests, btnLogout;
+    Button btnProfile, btnCreateRequest, btnViewOthers, btnViewMyRequests, btnPersonalFeed, btnLogout;
     FirebaseAuth mAuth;
     DatabaseReference databaseRef;
 
@@ -32,6 +32,8 @@ public class UserHomeActivity extends AppCompatActivity {
         btnCreateRequest = findViewById(R.id.btnCreateRequest);
         btnViewOthers = findViewById(R.id.btnViewOthers);
         btnViewMyRequests = findViewById(R.id.btnViewMyRequests);
+
+        btnPersonalFeed = findViewById(R.id.btnPersonalFeed);
         btnLogout = findViewById(R.id.btnLogout);
 
         btnLogout.setOnClickListener(view -> {
@@ -57,6 +59,13 @@ public class UserHomeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(UserHomeActivity.this, ViewOthersRequestsActivity.class));
+            }
+        });
+
+        btnPersonalFeed.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(UserHomeActivity.this, PersonalFeedActivity.class));
             }
         });
 

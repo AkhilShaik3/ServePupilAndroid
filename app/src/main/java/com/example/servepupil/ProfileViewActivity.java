@@ -14,6 +14,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.*;
 import com.example.servepupil.R;
 
+import java.util.Map;
+
 public class ProfileViewActivity extends AppCompatActivity {
 
     ImageView imageProfile;
@@ -57,6 +59,7 @@ public class ProfileViewActivity extends AppCompatActivity {
                 startActivityForResult(intent, 1001);
             }
         });
+
         linkChangePassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,22 +73,47 @@ public class ProfileViewActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
-                    UserModel user = snapshot.getValue(UserModel.class);
+                    String name = snapshot.child("name").getValue(String.class);
+                    String phone = snapshot.child("phone").getValue(String.class);
+                    String bio = snapshot.child("bio").getValue(String.class);
+                    String imageUrl = snapshot.child("imageUrl").getValue(String.class);
 
-                    if (user != null) {
-                        txtName.setText(user.getName());
-                        txtPhone.setText("Phone: " + user.getPhone());
-                        txtBio.setText("Location: " + user.getBio());
-                        txtFollowers.setText(String.valueOf(user.getFollowers()));
-                        txtFollowing.setText(String.valueOf(user.getFollowing()));
+                    txtName.setText(name != null ? name : "");
+                    txtPhone.setText("Phone: " + (phone != null ? phone : ""));
+                    txtBio.setText("Location: " + (bio != null ? bio : ""));
 
-                        userImageUrl = user.getImageUrl();
+                    // Handle followers count
+                    DataSnapshot followersSnapshot = snapshot.child("followers");
+                    long followersCount = (followersSnapshot.exists() && followersSnapshot.getValue() instanceof Map)
+                            ? followersSnapshot.getChildrenCount() : 0;
+                    txtFollowers.setText(String.valueOf(followersCount));
 
-                        Glide.with(ProfileViewActivity.this)
-                                .load(userImageUrl)
-                                .placeholder(R.drawable.placeholder)
-                                .into(imageProfile);
-                    }
+                    // Handle following count
+                    DataSnapshot followingSnapshot = snapshot.child("following");
+                    long followingCount = (followingSnapshot.exists() && followingSnapshot.getValue() instanceof Map)
+                            ? followingSnapshot.getChildrenCount() : 0;
+                    txtFollowing.setText(String.valueOf(followingCount));
+
+                    txtFollowers.setOnClickListener(v -> {
+                        Intent intent = new Intent(ProfileViewActivity.this, FollowersFollowingActivity.class);
+                        intent.putExtra("uid", uid);
+                        intent.putExtra("type", "followers");
+                        startActivity(intent);
+                    });
+
+                    txtFollowing.setOnClickListener(v -> {
+                        Intent intent = new Intent(ProfileViewActivity.this, FollowersFollowingActivity.class);
+                        intent.putExtra("uid", uid);
+                        intent.putExtra("type", "following");
+                        startActivity(intent);
+                    });
+
+
+                    userImageUrl = imageUrl;
+                    Glide.with(ProfileViewActivity.this)
+                            .load(userImageUrl)
+                            .placeholder(R.drawable.placeholder)
+                            .into(imageProfile);
                 } else {
                     Toast.makeText(ProfileViewActivity.this, "Profile not found", Toast.LENGTH_SHORT).show();
                 }
@@ -97,6 +125,7 @@ public class ProfileViewActivity extends AppCompatActivity {
             }
         });
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

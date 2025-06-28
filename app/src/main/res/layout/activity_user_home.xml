@@ -81,6 +81,17 @@
             android:padding="14dp" />
 
         <Button
+            android:id="@+id/btnPersonalFeed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="PersonalFeed"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#0097A7"
+            android:layout_marginBottom="24dp"
+            android:padding="14dp" />
+
+        <Button
             android:id="@+id/btnLogout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

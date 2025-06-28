@@ -4,8 +4,8 @@ import java.util.Map;
 
 public class RequestModel {
 
-    private String ownerUid;   // ADD THIS FIELD
-
+    private String id;            // ✅ ADD THIS FIELD
+    private String ownerUid;
     private String description;
     private String requestType;
     private String place;
@@ -17,10 +17,18 @@ public class RequestModel {
     private Map<String, CommentModel> comments;
 
     public RequestModel() {
-        // Required empty constructor for Firebase
+        // Default constructor required for calls to DataSnapshot.getValue(RequestModel.class)
     }
 
-    // Getter and setter for ownerUid
+    // ✅ Getters & Setters for ID
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public String getOwnerUid() {
         return ownerUid;
     }
@@ -28,8 +36,6 @@ public class RequestModel {
     public void setOwnerUid(String ownerUid) {
         this.ownerUid = ownerUid;
     }
-
-    // Other getters and setters
 
     public String getDescription() {
         return description;
@@ -101,5 +107,10 @@ public class RequestModel {
 
     public void setComments(Map<String, CommentModel> comments) {
         this.comments = comments;
+    }
+
+    // ✅ Derived property for likes count
+    public int getLikes() {
+        return likedBy != null ? likedBy.size() : 0;
     }
 }
