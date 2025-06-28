@@ -2,21 +2,21 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F9F9F9"
-    android:fillViewport="true">
+    android:padding="24dp"
+    android:background="@android:color/white">
 
     <LinearLayout
-        android:orientation="vertical"
-        android:padding="16dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <!-- Logo Row -->
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
+            android:gravity="start|center_vertical"
             android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="16dp">
 
             <ImageView
                 android:layout_width="60dp"
@@ -26,21 +26,17 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/heading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="My Requests"
+            android:text="Users List"
             android:textSize="22sp"
             android:textStyle="bold"
-            android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp" />
 
         <LinearLayout
-            android:id="@+id/requestsContainer"
+            android:id="@+id/usersContainer"
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="8dp" />
-
+            android:layout_height="wrap_content" />
     </LinearLayout>
 </ScrollView>

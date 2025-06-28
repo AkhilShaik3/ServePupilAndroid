@@ -3,13 +3,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F9F9F9"
-    android:fillViewport="true">
+    android:padding="16dp">
 
     <LinearLayout
         android:orientation="vertical"
-        android:padding="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+
         <!-- Logo Row -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -29,18 +29,17 @@
             android:id="@+id/heading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="My Requests"
+            android:text="Reported Users"
             android:textSize="22sp"
             android:textStyle="bold"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp" />
 
         <LinearLayout
-            android:id="@+id/requestsContainer"
-            android:orientation="vertical"
+            android:id="@+id/reportedUsersContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="8dp" />
-
+            android:orientation="vertical"
+            android:padding="16dp"/>
     </LinearLayout>
 </ScrollView>
